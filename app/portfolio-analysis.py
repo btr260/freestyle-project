@@ -36,6 +36,8 @@ portfolio = os.environ.get('PORTF')
 
 # PULL AND WRITE DATA -------------------------------------------------------------------
 
+failed_tickers = []
+
 tck_list = [p['tck'] for p in portfolio]
 
 for tkr in tck_list:
@@ -130,78 +132,78 @@ for tkr in tck_list:
                     'split coeff': parsed_response['Time Series (Daily)'][k]['8. split coefficient']
                 })
 
-                chart_data.append({
-                    'timestamp': k,
-                    'open': parsed_response['Time Series (Daily)'][k]['1. open'],
-                    'high': parsed_response['Time Series (Daily)'][k]['2. high'],
-                    'low': parsed_response['Time Series (Daily)'][k]['3. low'],
-                    'close': parsed_response['Time Series (Daily)'][k]['4. close'],
-                    'volume': parsed_response['Time Series (Daily)'][k]['5. volume']
-                })
+                #chart_data.append({
+                #    'timestamp': k,
+                #    'open': parsed_response['Time Series (Daily)'][k]['1. open'],
+                #    'high': parsed_response['Time Series (Daily)'][k]['2. high'],
+                #    'low': parsed_response['Time Series (Daily)'][k]['3. low'],
+                #    'close': parsed_response['Time Series (Daily)'][k]['4. close'],
+                #    'volume': parsed_response['Time Series (Daily)'][k]['5. volume']
+                #})
 
         # RECOMMENDATION ------------------------------------------------------------------------
 
-        rec_criteria = float(px_last) / float(recent_low)
+        #rec_criteria = float(px_last) / float(recent_low)
 
-        if rec_criteria >= 1.2:
-            rec = f"DO NOT BUY {symbol}!"
-            reason = f"{symbol} most recently closed at or above 20% of its recent low."
-            rec_cht = f"Do Not Buy: currently trading at or above 20% of its recent low"
+        #if rec_criteria >= 1.2:
+        #    rec = f"DO NOT BUY {symbol}!"
+        #    reason = f"{symbol} most recently closed at or above 20% of its recent low."
+        #    rec_cht = f"Do Not Buy: currently trading at or above 20% of its recent low"
 
-        else:
-            rec = f"BUY {symbol}!"
-            reason = f"{symbol} most recently closed within 20% of its recent low"
-            rec_cht = f"Buy: currently trading within 20% of recent low"
+        #else:
+        #    rec = f"BUY {symbol}!"
+        #    reason = f"{symbol} most recently closed within 20% of its recent low"
+        #    rec_cht = f"Buy: currently trading within 20% of recent low"
 
         # PRINT INFORMATION ---------------------------------------------------------------------
 
         print("-------------------------")
-        print(f"SELECTED SYMBOL: {symbol}")
+        print(f"SELECTED SYMBOL: {tkr}")
         print("-------------------------")
-        print(
-            f"LATEST DAY: {last_ref_dt.strftime('%A, %B %#d')}{date_suffix(last_ref_dt)}, {last_ref_dt.strftime('%Y')}")
-        print(f"LATEST CLOSE: {to_usd(float(px_last))}")
-        print(f"RECENT HIGH: {to_usd(recent_high)}")
-        print(f"RECENT LOW: {to_usd(recent_low)}")
-        print("-------------------------")
-        print(
-            f"ANALYSIS: {symbol} is trading at {(100*rec_criteria):.1f}% of its recent low")
-        print(f"RECOMMENDATION: {rec}")
-        print(f"RECOMMENDATION REASON: {reason}")
+        #print(
+        #    f"LATEST DAY: {last_ref_dt.strftime('%A, %B %#d')}{date_suffix(last_ref_dt)}, {last_ref_dt.strftime('%Y')}")
+        #print(f"LATEST CLOSE: {to_usd(float(px_last))}")
+        #print(f"RECENT HIGH: {to_usd(recent_high)}")
+        #print(f"RECENT LOW: {to_usd(recent_low)}")
+        #print("-------------------------")
+        #print(
+        #    f"ANALYSIS: {symbol} is trading at {(100*rec_criteria):.1f}% of its recent low")
+        #print(f"RECOMMENDATION: {rec}")
+        #print(f"RECOMMENDATION REASON: {reason}")
         print("-------------------------")
         print(f"WRITING DATA TO CSV: {os.path.abspath(csv_filepath)}")
         print("-------------------------")
 
         #PREP CHART----------------------------------------------------------------------------------
 
-        sorted_chart_data = sorted(
-            chart_data, key=operator.itemgetter('timestamp'), reverse=False)
+        #sorted_chart_data = sorted(
+        #    chart_data, key=operator.itemgetter('timestamp'), reverse=False)
 
-        #print(sorted_chart_data)
+        ##print(sorted_chart_data)
 
-        cht_timestamp = [p['timestamp'] for p in sorted_chart_data]
-        cht_open = [p['open'] for p in sorted_chart_data]
-        cht_close = [p['close'] for p in sorted_chart_data]
-        cht_high = [p['high'] for p in sorted_chart_data]
-        cht_low = [p['low'] for p in sorted_chart_data]
-        #print(cht_timestamp)
+        #cht_timestamp = [p['timestamp'] for p in sorted_chart_data]
+        #cht_close = [p['close'] for p in sorted_chart_data]
+        #cht_open = [p['open'] for p in sorted_chart_data]
+        #cht_high = [p['high'] for p in sorted_chart_data]
+        #cht_low = [p['low'] for p in sorted_chart_data]
+        ##print(cht_timestamp)
 
-        anno = [dict(x=last_ref_dt, y=px_last, xref='x', yref='y', text=f"Last Close: {to_usd(float(px_last))}", showarrow=True, arrowhead=7, ax=-40, ay=80),
-                dict(x=recent_high_dt, y=recent_high, xref='x', yref='y',
-                     text=f"Recent High: {to_usd(recent_high)}", showarrow=True, arrowhead=7, ax=-40, ay=-40),
-                dict(x=recent_low_dt, y=recent_low, xref='x', yref='y',
-                     text=f"Recent Low: {to_usd(recent_low)}", showarrow=True, arrowhead=7, ax=-40, ay=40),
-                dict(x=last_ref_dt, y=(1.2*recent_low), xref='x', yref='y', text=f"Price Threshhold for Purchase: {to_usd(1.2*recent_low)}", showarrow=False, yanchor='bottom', xanchor='right')]
+        #anno = [dict(x=last_ref_dt, y=px_last, xref='x', yref='y', text=f"Last Close: {to_usd(float(px_last))}", showarrow=True, arrowhead=7, ax=-40, ay=80),
+        #        dict(x=recent_high_dt, y=recent_high, xref='x', yref='y',
+        #             text=f"Recent High: {to_usd(recent_high)}", showarrow=True, arrowhead=7, ax=-40, ay=-40),
+        #        dict(x=recent_low_dt, y=recent_low, xref='x', yref='y',
+        #             text=f"Recent Low: {to_usd(recent_low)}", showarrow=True, arrowhead=7, ax=-40, ay=40),
+        #        dict(x=last_ref_dt, y=(1.2*recent_low), xref='x', yref='y', text=f"Price Threshhold for Purchase: {to_usd(1.2*recent_low)}", showarrow=False, yanchor='bottom', xanchor='right')]
 
-        thresh = [dict(x0=min(cht_timestamp), x1=max(cht_timestamp), y0=(
-            1.2*recent_low), y1=(1.2*recent_low), xref='x', yref='y', line_width=1)]
+        #thresh = [dict(x0=min(cht_timestamp), x1=max(cht_timestamp), y0=(
+        #    1.2*recent_low), y1=(1.2*recent_low), xref='x', yref='y', line_width=1)]
 
-        #print(anno)
-        fig = go.Figure(data=[go.Candlestick(
-            x=cht_timestamp, open=cht_open, high=cht_high, low=cht_low, close=cht_close)],
-            layout=go.Layout(title=go.layout.Title(text=f"{symbol} - {rec_cht}"), shapes=thresh, annotations=anno, yaxis_title="Price per Share (USD)"))
+        ##print(anno)
+        #fig = go.Figure(data=[go.Candlestick(
+        #    x=cht_timestamp, open=cht_open, high=cht_high, low=cht_low, close=cht_close)],
+        #    layout=go.Layout(title=go.layout.Title(text=f"{symbol} - {rec_cht}"), shapes=thresh, annotations=anno, yaxis_title="Price per Share (USD)"))
 
-        fig.show()
+        #fig.show()
 
     else:  # IF TICKER NOT FOUND ON API
 
@@ -215,3 +217,5 @@ for tkr in tck_list:
 
         else:
             failed_tickers.append({'ticker': tkr, 'err_type': 'Other'})
+
+breakpoint()
