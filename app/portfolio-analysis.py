@@ -48,6 +48,16 @@ def to_usd(my_price):
     '''
     return f'${my_price:,.2f}'  # > $12,000.71
 
+def num_suffix(num_for_suffix):
+    '''
+    Adds st, nd, rd, or th to the end of a day of the month.
+    '''
+    if 4 <= num_for_suffix <= 20 or 24 <= num_for_suffix <= 30:
+        suffix = 'th'
+    else:
+        suffix = ['st', 'nd', 'rd'][num_for_suffix % 10 - 1]
+
+    return suffix
 
 # PULL AND WRITE DATA -------------------------------------------------------------------
 
@@ -136,8 +146,9 @@ for i in range(0,batch,1):
 
     if i < (batch - 1):
         print('-----------------------------------------------',flush=True)
-        print(f'Round {i+1} complete!', flush=True)
+        print(f'The {i+1}{num_suffix(i+1)} Batch of Downloads is Complete!', flush=True)
         print('Waiting 1 minute to download next batch of data', flush=True)
+        print(f'Estimated remaining download time is approximately {batch-i-1} minutes.', flush=True)
         print('-----------------------------------------------', flush=True)
 
     else:
