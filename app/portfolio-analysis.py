@@ -7,13 +7,32 @@ import datetime
 import csv
 import os
 from dotenv import load_dotenv
-import plotly.graph_objects as go
-import operator
+import time
 
 # LOAD ENVIRONMENT VARIABLES ------------------------------------------------------------
 
 load_dotenv()
 api_key = os.environ.get('ALPHAVANTAGE_API_KEY')
+portfolio = [{'id': 1, 'tck': 'ABBV', 'qty': 225.000},
+         {'id': 2, 'tck': 'AZO', 'qty': 5.000},
+         {'id': 3, 'tck': 'STZ', 'qty': 100.000},
+         {'id': 4, 'tck': 'CCI', 'qty': 39.000},
+         {'id': 5, 'tck': 'CVS', 'qty': 200.000},
+         {'id': 6, 'tck': 'DE', 'qty': 26.000},
+         {'id': 7, 'tck': 'DELL', 'qty': 108.000},
+         {'id': 8, 'tck': 'ENB', 'qty': 116.000},
+         {'id': 9, 'tck': 'HD', 'qty': 22.000},
+         {'id': 10, 'tck': 'JPM', 'qty': 35.000},
+         {'id': 11, 'tck': 'KKR', 'qty': 185.000},
+         {'id': 12, 'tck': 'MPC', 'qty': 450.000},
+         {'id': 13, 'tck': 'MRK', 'qty': 72.000},
+         {'id': 14, 'tck': 'MET', 'qty': 90.000},
+         {'id': 15, 'tck': 'NXST', 'qty': 55.000},
+         {'id': 16, 'tck': 'NVT', 'qty': 60.000},
+         {'id': 17, 'tck': 'PNR', 'qty': 60.000},
+         {'id': 18, 'tck': 'RTX', 'qty': 46.000},
+         {'id': 19, 'tck': 'SNY', 'qty': 100.000}]
+
 
 # DEFINE FUNCTIONS ----------------------------------------------------------------------
 
@@ -30,192 +49,113 @@ def to_usd(my_price):
     return f'${my_price:,.2f}'  # > $12,000.71
 
 
-# SET PORTFOLIO -------------------------------------------------------------------------
-
-portfolio = os.environ.get('PORTF')
-
 # PULL AND WRITE DATA -------------------------------------------------------------------
 
 failed_tickers = []
 
 tck_list = [p['tck'] for p in portfolio]
 
-for tkr in tck_list:
+batch = int(len(tck_list) / 5) + (len(tck_list) % 5 > 0)
 
-    request_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol={tkr}&apikey={api_key}"
-    response = requests.get(request_url)
+print('-----------------------------------------------', flush=True)
+print(f'You have specified a portfolio of {len(tck_list)} tickers.\nThe program will now retrieve data from the Alpha Vantage API.', flush=True)
+print('-----------------------------------------------', flush=True)
 
-    # PARSE API DATA -----------------------------------------------------------------------
+if len(tck_list) > 5:
+    print('-----------------------------------------------', flush=True)
+    print(f'WARNING! DUE TO NUMBER OF TICKERS IN YOUR PORTFOLIO,\nTHE DATA COLLECTION PROCESS MAY TAKE APPROXIMATELY {batch-1} MINUTES TO COMPLETE!', flush=True)
+    print('-----------------------------------------------', flush=True)
 
-    parsed_response = json.loads(response.text)
+for i in range(0,batch,1):
+    start = i * 5
+    end = max(len(tck_list) - 1, start + 4)
 
-    error_check_list = list(parsed_response.keys())
-    error_check = error_check_list[0]
+    if i > 0:
+        time.sleep(65)
 
-    if error_check == 'Meta Data':  # IF TICKER IS ABLE TO PULL ACTUAL DATA
+    for tkr in tck_list[start:end]:
 
-        ## PULL LAST REFRESH DATE FROM DATA ------------------------------------------------------------------
+        request_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY_ADJUSTED&symbol={tkr}&apikey={api_key}"
+        response = requests.get(request_url)
 
-        #last_refreshed = parsed_response['Meta Data']['3. Last Refreshed']
+        # PARSE API DATA -----------------------------------------------------------------------
 
-        #last_ref_dt = datetime.datetime.fromisoformat(last_refreshed)
+        parsed_response = json.loads(response.text)
 
-        ## PULL SYMBOL FROM DATA ------------------------------------------------------------------
+        error_check_list = list(parsed_response.keys())
+        error_check = error_check_list[0]
 
-        #symbol = parsed_response['Meta Data']['2. Symbol']
+        if error_check == 'Meta Data':  # IF TICKER IS ABLE TO PULL ACTUAL DATA
 
-        ## PULL LATEST CLOSE FROM DATA ------------------------------------------------------------
+            ## PULL LATEST CLOSE FROM DATA ------------------------------------------------------------
 
-        close_days = list(parsed_response['Time Series (Daily)'].keys())
-        #latest_day = close_days[0]
-        #px_last = parsed_response['Time Series (Daily)'][latest_day]['4. close']
+            close_days = list(parsed_response['Monthly Adjusted Time Series'].keys())
+            latest_day = close_days[0]
 
-        ## PULL HIGH AND LOW FROM DATA----------------------------------------------------------------
+            ## WRITE CSV DATA ------------------------------------------------------------------------
 
-        #highlow_pd = min(100, len(close_days))
+            headers = ['timestamp', 'open', 'high', 'low', 'close', 'adj close', 'volume', 'div amt']
 
-        #high_px = []
+            csv_filepath = os.path.join(os.path.dirname(os.path.abspath(
+                __file__)), '..', 'data', f"{tkr}.csv")
 
-        #for d in close_days[0:highlow_pd]:
-        #    high_px.append(
-        #        float(parsed_response['Time Series (Daily)'][d]['2. high']))
+            with open(csv_filepath, 'w') as csv_file:
+                writer = csv.DictWriter(csv_file, fieldnames=headers)
+                writer.writeheader()
 
-        #recent_high = max(high_px)
+                for k in close_days:
+                    writer.writerow({
+                        'timestamp': k,
+                        'open': parsed_response['Monthly Adjusted Time Series'][k]['1. open'],
+                        'high': parsed_response['Monthly Adjusted Time Series'][k]['2. high'],
+                        'low': parsed_response['Monthly Adjusted Time Series'][k]['3. low'],
+                        'close': parsed_response['Monthly Adjusted Time Series'][k]['4. close'],
+                        'adj close': parsed_response['Monthly Adjusted Time Series'][k]['5. adjusted close'],
+                        'volume': parsed_response['Monthly Adjusted Time Series'][k]['6. volume'],
+                        'div amt': parsed_response['Monthly Adjusted Time Series'][k]['7. dividend amount'],
+                    })
 
-        #low_px = []
+            # PRINT STATUS ---------------------------------------------------------------------
 
-        #for d in close_days[0:highlow_pd]:
-        #    low_px.append(
-        #        float(parsed_response['Time Series (Daily)'][d]['3. low']))
+            print('-----------------------------------------------', flush=True)
+            print(f"DOWNLOADING DATA FOR: {tkr}", flush=True)
+            print(f"WRITING DATA TO CSV: {os.path.abspath(csv_filepath)}", flush=True)
+            print('-----------------------------------------------', flush=True)
 
-        #recent_low = min(low_px)
+        else:  # IF TICKER NOT FOUND ON API
 
-        ## PULL MOST RECENT DATE OF HIGH/LOW PRICE FOR USE IN CHART--------------------------------
-        #high_date = []
-        #low_date = []
+            if error_check == "Error Message":
+                failed_tickers.append(
+                    {'ticker': tkr, 'err_type': 'Invalid API Call'})
 
-        #for k, d in parsed_response['Time Series (Daily)'].items():
+            elif error_check == "Note":
+                failed_tickers.append(
+                    {'ticker': tkr, 'err_type': 'Exceeds API Call Limit (5 per minute and 500 per day)'})
 
-        #    if float(d['2. high']) == recent_high:
-        #        high_date.append(k)
+            else:
+                failed_tickers.append({'ticker': tkr, 'err_type': 'Other'})
 
-        #    elif float(d['3. low']) == recent_low:
-        #        low_date.append(k)
+    if i < (batch - 1):
+        print('-----------------------------------------------',flush=True)
+        print(f'Round {i+1} complete!', flush=True)
+        print('Waiting 1 minute to download next batch of data', flush=True)
+        print('-----------------------------------------------', flush=True)
 
-        #recent_high_dt = datetime.datetime.fromisoformat(high_date[0])
+    else:
+        print('-----------------------------------------------', flush=True)
+        print('Data download complete', flush=True)
+        print('-----------------------------------------------', flush=True)
 
-        #recent_low_dt = datetime.datetime.fromisoformat(low_date[0])
-
-        ## WRITE CSV DATA ------------------------------------------------------------------------
-
-        headers = ['timestamp', 'open', 'high', 'low', 'close', 'adj close', 'volume', 'div amt', 'split coeff']
-
-        csv_filepath = os.path.join(os.path.dirname(os.path.abspath(
-            __file__)), '..', 'data', f"{tkr}.csv")
-
-        #chart_data = []
-
-        with open(csv_filepath, 'w') as csv_file:
-            writer = csv.DictWriter(csv_file, fieldnames=headers)
-            writer.writeheader()
-
-            for k in close_days:
-                writer.writerow({
-                    'timestamp': k,
-                    'open': parsed_response['Time Series (Daily)'][k]['1. open'],
-                    'high': parsed_response['Time Series (Daily)'][k]['2. high'],
-                    'low': parsed_response['Time Series (Daily)'][k]['3. low'],
-                    'close': parsed_response['Time Series (Daily)'][k]['4. close'],
-                    'adj close': parsed_response['Time Series (Daily)'][k]['5. adjusted close'],
-                    'volume': parsed_response['Time Series (Daily)'][k]['6. volume'],
-                    'div amt': parsed_response['Time Series (Daily)'][k]['7. dividend amount'],
-                    'split coeff': parsed_response['Time Series (Daily)'][k]['8. split coefficient']
-                })
-
-                #chart_data.append({
-                #    'timestamp': k,
-                #    'open': parsed_response['Time Series (Daily)'][k]['1. open'],
-                #    'high': parsed_response['Time Series (Daily)'][k]['2. high'],
-                #    'low': parsed_response['Time Series (Daily)'][k]['3. low'],
-                #    'close': parsed_response['Time Series (Daily)'][k]['4. close'],
-                #    'volume': parsed_response['Time Series (Daily)'][k]['5. volume']
-                #})
-
-        # RECOMMENDATION ------------------------------------------------------------------------
-
-        #rec_criteria = float(px_last) / float(recent_low)
-
-        #if rec_criteria >= 1.2:
-        #    rec = f"DO NOT BUY {symbol}!"
-        #    reason = f"{symbol} most recently closed at or above 20% of its recent low."
-        #    rec_cht = f"Do Not Buy: currently trading at or above 20% of its recent low"
-
-        #else:
-        #    rec = f"BUY {symbol}!"
-        #    reason = f"{symbol} most recently closed within 20% of its recent low"
-        #    rec_cht = f"Buy: currently trading within 20% of recent low"
-
-        # PRINT INFORMATION ---------------------------------------------------------------------
-
+# ERROR SUMMARY -----------------------------------------------------------------
+if len(failed_tickers) > 0:
+    if len(failed_tickers) == len(tck_list):
         print("-------------------------")
-        print(f"SELECTED SYMBOL: {tkr}")
-        print("-------------------------")
-        #print(
-        #    f"LATEST DAY: {last_ref_dt.strftime('%A, %B %#d')}{date_suffix(last_ref_dt)}, {last_ref_dt.strftime('%Y')}")
-        #print(f"LATEST CLOSE: {to_usd(float(px_last))}")
-        #print(f"RECENT HIGH: {to_usd(recent_high)}")
-        #print(f"RECENT LOW: {to_usd(recent_low)}")
-        #print("-------------------------")
-        #print(
-        #    f"ANALYSIS: {symbol} is trading at {(100*rec_criteria):.1f}% of its recent low")
-        #print(f"RECOMMENDATION: {rec}")
-        #print(f"RECOMMENDATION REASON: {reason}")
-        print("-------------------------")
-        print(f"WRITING DATA TO CSV: {os.path.abspath(csv_filepath)}")
+        print("UNABLE TO GENERATE REPORT FOR THE SPECIFIED TICKER(S).\nSEE ERROR SUMMARY")
         print("-------------------------")
 
-        #PREP CHART----------------------------------------------------------------------------------
-
-        #sorted_chart_data = sorted(
-        #    chart_data, key=operator.itemgetter('timestamp'), reverse=False)
-
-        ##print(sorted_chart_data)
-
-        #cht_timestamp = [p['timestamp'] for p in sorted_chart_data]
-        #cht_close = [p['close'] for p in sorted_chart_data]
-        #cht_open = [p['open'] for p in sorted_chart_data]
-        #cht_high = [p['high'] for p in sorted_chart_data]
-        #cht_low = [p['low'] for p in sorted_chart_data]
-        ##print(cht_timestamp)
-
-        #anno = [dict(x=last_ref_dt, y=px_last, xref='x', yref='y', text=f"Last Close: {to_usd(float(px_last))}", showarrow=True, arrowhead=7, ax=-40, ay=80),
-        #        dict(x=recent_high_dt, y=recent_high, xref='x', yref='y',
-        #             text=f"Recent High: {to_usd(recent_high)}", showarrow=True, arrowhead=7, ax=-40, ay=-40),
-        #        dict(x=recent_low_dt, y=recent_low, xref='x', yref='y',
-        #             text=f"Recent Low: {to_usd(recent_low)}", showarrow=True, arrowhead=7, ax=-40, ay=40),
-        #        dict(x=last_ref_dt, y=(1.2*recent_low), xref='x', yref='y', text=f"Price Threshhold for Purchase: {to_usd(1.2*recent_low)}", showarrow=False, yanchor='bottom', xanchor='right')]
-
-        #thresh = [dict(x0=min(cht_timestamp), x1=max(cht_timestamp), y0=(
-        #    1.2*recent_low), y1=(1.2*recent_low), xref='x', yref='y', line_width=1)]
-
-        ##print(anno)
-        #fig = go.Figure(data=[go.Candlestick(
-        #    x=cht_timestamp, open=cht_open, high=cht_high, low=cht_low, close=cht_close)],
-        #    layout=go.Layout(title=go.layout.Title(text=f"{symbol} - {rec_cht}"), shapes=thresh, annotations=anno, yaxis_title="Price per Share (USD)"))
-
-        #fig.show()
-
-    else:  # IF TICKER NOT FOUND ON API
-
-        if error_check == "Error Message":
-            failed_tickers.append(
-                {'ticker': tkr, 'err_type': 'Invalid API Call'})
-
-        elif error_check == "Note":
-            failed_tickers.append(
-                {'ticker': tkr, 'err_type': 'Exceeds API Call Limit (5 per minute and 500 per day)'})
-
-        else:
-            failed_tickers.append({'ticker': tkr, 'err_type': 'Other'})
-
-breakpoint()
+    print("-------------------------")
+    print("ERROR SUMMARY:")
+    print("The program discarded or was unable to pull data from the API for the following ticker(s):")
+    for t in failed_tickers:
+        print(f"----{t['ticker']}: {t['err_type']}")
+    print("Please check the accuracy of the ticker(s) and try again.")
