@@ -68,8 +68,7 @@ if len(tck_list) > 5:
 
 for i in range(0,batch,1):
     start = i * 5
-    end = max(len(tck_list) - 1, start + 4)
-
+    end = min(len(tck_list), start + 5)
     if i > 0:
         time.sleep(65)
 
@@ -155,7 +154,7 @@ if len(failed_tickers) > 0:
 
     print("-------------------------")
     print("ERROR SUMMARY:")
-    print("The program discarded or was unable to pull data from the API for the following ticker(s):")
+    print("The program was unable to pull data from the API for the following ticker(s):")
     for t in failed_tickers:
         print(f"----{t['ticker']}: {t['err_type']}")
     print("Please check the accuracy of the ticker(s) and try again.")
