@@ -77,10 +77,39 @@ sub = full_sort.loc[(full_sort['month'] <= minomax) & (full_sort['month'] >= max
 
 sub = sub.sort_values(by=['ticker', 'month'])
 
-breakpoint()
 
 # CALCULATE RETURNS (this and other functions from https://www.codingfinance.com/post/2018-04-03-calc-returns-py/)
 
 sub['mret'] = sub.groupby('ticker')['adj close'].pct_change()
 sub['mretp1'] = sub['mret'] + 1
-#sub['cumret'] = sub.groupby('ticker')['mretp1'].cumprod()
+
+sub['sh val'] = sub['qty'] * sub['close']
+
+pd_len = 5
+pd_end = minomax
+pd_start = max(minomax - (pd_len * 12), maxomin)
+
+
+# Start Value of Assets
+pd_start_val = sub.loc[sub['month']==pd_start]
+pd_start_val = pd_start_val.set_index('ticker')
+pd_start_val=pd_start_val['sh val']
+
+# Cum Return of Assets
+cum_ret_set = sub.loc[(sub['month'] > pd_start) & (sub['month'] <= pd_end)]
+cum_ret_set = cum_ret_set.set_index('ticker')
+cum_ret_set['cumret']=cum_ret_set.groupby('ticker')['mretp1'].cumprod()
+cum_ret_set = cum_ret_set.loc[cum_ret_set['month'] == pd_end]
+cum_ret = cum_ret_set['cumret']
+
+# Calc Portf Return
+pd_end_val = pd_start_val * cum_ret
+port_start_val = pd_start_val.sum()
+port_end_val = pd_end_val.sum()
+tot_pd_ret = port_end_val / port_start_val - 1
+months = 12 * (pd_end.year - pd_start.year) + (pd_end.month - pd_start.month)
+years = months / 12
+avg_ann_ret = (1 + tot_pd_ret)**(1 / years) - 1
+avg_mon_ret = (1 + tot_pd_ret)**(1 / months) - 1
+
+breakpoint()
