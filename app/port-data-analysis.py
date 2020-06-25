@@ -78,3 +78,9 @@ sub = full_sort.loc[(full_sort['month'] <= minomax) & (full_sort['month'] >= max
 sub = sub.sort_values(by=['ticker', 'month'])
 
 breakpoint()
+
+# CALCULATE RETURNS (this and other functions from https://www.codingfinance.com/post/2018-04-03-calc-returns-py/)
+
+sub['mret'] = sub.groupby('ticker')['adj close'].pct_change()
+sub['mretp1'] = sub['mret'] + 1
+#sub['cumret'] = sub.groupby('ticker')['mretp1'].cumprod()
