@@ -49,11 +49,32 @@ else:
             __file__)), '..', 'data', f"{t}.csv")
 
         temp_data = pd.read_csv(temp_path, parse_dates=['timestamp'])
-        print(temp_data)
+        #print(temp_data)
 
         full=full.append(temp_data)
 
 
 full_sort = full.sort_values(by=['ticker', 'timestamp'])
+
+# CREATE MONTH VARIABLE
+full_sort['month'] = full_sort['timestamp'].dt.to_period('M')  # SOURCE: https://stackoverflow.com/questions/45304531/extracting-the-first-day-of-month-of-a-datetime-type-column-in-pandas
+
+
+# GET FIRST AND LAST MONTHS
+
+maxomin = full_sort.groupby('ticker')['month'].min()
+#print(maxomin)
+maxomin = maxomin.max()
+#print(maxomin)
+
+minomax = full_sort.groupby('ticker')['month'].max()
+#print(minomax)
+minomax = minomax.min()
+#print(minomax)
+
+# SUBSET DATA FOR FIRST/LAST MONTH
+sub = full_sort.loc[(full_sort['month'] <= minomax) & (full_sort['month'] >= maxomin)]
+
+sub = sub.sort_values(by=['ticker', 'month'])
 
 breakpoint()
