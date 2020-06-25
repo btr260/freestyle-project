@@ -153,6 +153,7 @@ def api_data_pull(portfolio):
     else:
         return True
 
+
 if __name__=='__main__':
 
     portfolio = [{'id': 1, 'tck': 'ABBV', 'qty': 225.000},
