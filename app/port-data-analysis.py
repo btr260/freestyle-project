@@ -112,4 +112,6 @@ years = months / 12
 avg_ann_ret = (1 + tot_pd_ret)**(1 / years) - 1
 avg_mon_ret = (1 + tot_pd_ret)**(1 / months) - 1
 
+ret_calc = {'years_tgt': pd_len, 'years_act': years, 'st_date': pd_start, 'end_date': pd_end, 'ann_ret': avg_ann_ret, 'mon_ret': avg_mon_ret}
+
 breakpoint()
