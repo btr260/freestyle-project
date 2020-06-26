@@ -6,6 +6,7 @@ import csv
 import os
 from dotenv import load_dotenv
 import time
+import pandas as pd
 
 # LOAD ENVIRONMENT VARIABLES ------------------------------------------------------------
 
@@ -51,7 +52,7 @@ parsed_spy = json.loads(spy_response.text)
 
 close_days = list(parsed_spy['Monthly Adjusted Time Series'].keys())
 
-spy_headers = ['ticker', 'timestamp', 'close',
+spy_headers = ['timestamp', 'close',
            'adj close', 'volume', 'div amt']
 
 spy_filepath = os.path.join(os.path.dirname(os.path.abspath(
@@ -64,7 +65,6 @@ with open(spy_filepath, 'w') as spy_file:
     for k in close_days:
 
         writer.writerow({
-            'ticker': 'SPY',
             'timestamp': k,
             'close': parsed_spy['Monthly Adjusted Time Series'][k]['4. close'],
             'adj close': parsed_spy['Monthly Adjusted Time Series'][k]['5. adjusted close'],
@@ -77,7 +77,7 @@ fred_response = requests.get(fred_url)
 
 parsed_fred = json.loads(fred_response.text)
 
-fred_data = [{'date':x['date'], 'rate':x['value']} for x in parsed_fred['observations']]
+#fred_data = [{'date':x['date'], 'rate':x['value']} for x in parsed_fred['observations']]
 
 fred_filepath = os.path.join(os.path.dirname(os.path.abspath(
     __file__)), '..', 'data', "FRED.csv")
@@ -96,3 +96,19 @@ with open(fred_filepath, 'w') as fred_file:
                 'date': k['date'],
                 'rate': k['value']
             })
+
+
+spy = pd.read_csv(spy_filepath, parse_dates=['timestamp'])
+spy_sort = spy.sort_values(by=['timestamp'])
+spy_sort['month'] = spy_sort['timestamp'].dt.to_period('M')
+spy_sort=spy_sort.set_index('month')
+spy_sort['spret'] = spy_sort['adj close'].pct_change()
+spy_ret = spy_sort['spret']
+
+
+
+fred = pd.read_csv(fred_filepath, parse_dates=['date'])
+fred['month'] = fred['date'].dt.to_period('M')
+risk_free = fred.groupby('month')['rate'].mean()
+
+breakpoint()

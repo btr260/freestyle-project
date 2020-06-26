@@ -49,14 +49,14 @@ def api_data_pull(portfolio):
 
     if len(tck_list) > 5:
         print('-----------------------------------------------', flush=True)
-        print(f'WARNING! DUE TO NUMBER OF TICKERS IN YOUR PORTFOLIO,\nTHE DATA COLLECTION PROCESS MAY TAKE APPROXIMATELY {batch-1} MINUTES TO COMPLETE!', flush=True)
+        print(f'WARNING! DUE TO NUMBER OF TICKERS IN YOUR PORTFOLIO,\nTHE DATA COLLECTION PROCESS MAY TAKE APPROXIMATELY {batch} MINUTES TO COMPLETE!', flush=True)
         print('-----------------------------------------------', flush=True)
 
     for i in range(0,batch,1):
         start = i * 5
         end = min(len(tck_list), start + 5)
-        if i > 0:
-            time.sleep(70)
+
+        time.sleep(70)
 
         for tkr in tck_list[start:end]:
 
