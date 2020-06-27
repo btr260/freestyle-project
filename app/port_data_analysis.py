@@ -43,6 +43,18 @@ def returns(dataset,period_length,min_start,max_end):
     port_ret.loc[pd_start + 1,
                  'mon ret'] = port_ret.loc[pd_start + 1, 'cum ret'] - 1
 
+    port_ret = port_ret.join(spy_join)
+
+    port_ret = port_ret.join(fred_join)
+
+    port_ret['spretp1'] = port_ret['spret'] + 1
+    port_ret['cum spret'] = port_ret['spretp1'].cumprod()
+    port_ret = port_ret.drop(columns=['spretp1'])
+
+    port_ret['exret'] = port_ret['mon ret'] - port_ret['rate']
+    port_ret['exspret'] = port_ret['spret'] - port_ret['rate']
+
+
     # Calc Portf Return
     tot_pd_ret = port_ret.loc[pd_end, 'cum ret'] - 1
     months = len(port_ret)
@@ -113,10 +125,14 @@ if __name__=='__main__':
         sub['month']=sub['month'].dt.to_period('M')
 
         spy_join = pd.read_csv(os.path.join(os.path.dirname(os.path.abspath(
-            __file__)), '..', 'data', "working_spy.csv"),index_col='month')
+            __file__)), '..', 'data', "working_spy.csv"), parse_dates=['month'])
+        spy_join['month'] = spy_join['month'].dt.to_period('M')
+        spy_join=spy_join.set_index('month')
 
         fred_join = pd.read_csv(os.path.join(os.path.dirname(os.path.abspath(
-            __file__)), '..', 'data', "working_fred.csv"), index_col='month')
+            __file__)), '..', 'data', "working_fred.csv"), parse_dates=['month'])
+        fred_join['month'] = fred_join['month'].dt.to_period('M')
+        fred_join=fred_join.set_index('month')
 
         maxomin = sub['month'].min()
         minomax = sub['month'].max()
