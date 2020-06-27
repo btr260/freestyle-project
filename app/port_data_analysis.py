@@ -111,11 +111,8 @@ if __name__=='__main__':
 
     sub, minomax, maxomin=port_data_pull(portfolio,ap_api_key)
 
-
     # Calculate returns
     results = []
 
     for i in [1,2,3,5]:
         results.append(returns(sub, i, maxomin, minomax))
-
-    breakpoint()

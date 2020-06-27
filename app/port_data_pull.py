@@ -132,7 +132,7 @@ def port_data_pull(portfolio,api_key):
             print(f"----{t['ticker']}: {t['err_type']}")
         print("Please check the accuracy of the ticker(s) and try again.")
 
-        return False
+        return exit()
 
     else:
 
