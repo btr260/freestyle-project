@@ -8,25 +8,9 @@ import csv
 import os
 from dotenv import load_dotenv
 import time
-
-# LOAD ENVIRONMENT VARIABLES ------------------------------------------------------------
-
-load_dotenv()
-api_key = os.environ.get('ALPHAVANTAGE_API_KEY')
+import pandas as pd
 
 # DEFINE FUNCTIONS ----------------------------------------------------------------------
-
-def to_usd(my_price):
-    '''
-    Converts a numeric value to usd-formatted string, for printing and display purposes.
-
-    Param: my_price (int or float) like 4000.444444
-
-    Example: to_usd(4000.444444)
-
-    Returns: $4,000.44
-    '''
-    return f'${my_price:,.2f}'  # > $12,000.71
 
 def num_suffix(num_for_suffix):
     '''
@@ -39,7 +23,7 @@ def num_suffix(num_for_suffix):
 
     return suffix
 
-def api_data_pull(portfolio):
+def port_data_pull(portfolio,api_key):
 
     failed_tickers = []
 
@@ -131,7 +115,7 @@ def api_data_pull(portfolio):
 
         else:
             print('-----------------------------------------------', flush=True)
-            print('Data download complete', flush=True)
+            print('Data download complete.  Compiling portfolio dataset now.', flush=True)
             print('-----------------------------------------------', flush=True)
 
     # ERROR SUMMARY -----------------------------------------------------------------
@@ -151,10 +135,70 @@ def api_data_pull(portfolio):
         return False
 
     else:
-        return True
+
+        start_path = os.path.join(os.path.dirname(os.path.abspath(
+            __file__)), '..', 'data', f"{tck_list[0]}.csv")
+
+
+        full = pd.read_csv(start_path, parse_dates=['timestamp'])
+
+
+        if len(tck_list) == 2:
+
+            next_path = os.path.join(os.path.dirname(os.path.abspath(
+                __file__)), '..', 'data', f"{tck_list[1]}.csv")
+
+            temp_data = pd.read_csv(next_path, parse_dates=['timestamp'])
+
+            full = full.append(temp_data)
+
+        else:
+
+            for t in tck_list[1:len(tck_list)]:
+
+                temp_path = os.path.join(os.path.dirname(os.path.abspath(
+                    __file__)), '..', 'data', f"{t}.csv")
+
+                temp_data = pd.read_csv(temp_path, parse_dates=['timestamp'])
+                #print(temp_data)
+
+                full = full.append(temp_data)
+
+
+        full_sort = full.sort_values(by=['ticker', 'timestamp'])
+
+        # CREATE MONTH VARIABLE
+        # SOURCE: https://stackoverflow.com/questions/45304531/extracting-the-first-day-of-month-of-a-datetime-type-column-in-pandas
+        full_sort['month'] = full_sort['timestamp'].dt.to_period('M')
+
+        # Resize data for consistent periods -------------------------------------------------------
+
+        maxomin = full_sort.groupby('ticker')['month'].min()
+        #print(maxomin)
+        maxomin = maxomin.max()
+        #print(maxomin)
+
+        minomax = full_sort.groupby('ticker')['month'].max()
+        #print(minomax)
+        minomax = minomax.min()
+        #print(minomax)
+
+        # SUBSET DATA FOR FIRST/LAST MONTH
+        sub = full_sort.loc[(full_sort['month'] <= minomax) &
+                            (full_sort['month'] >= maxomin)]
+
+        sub = sub.sort_values(by=['ticker', 'month'])
+
+
+        return sub, minomax, maxomin
 
 
 if __name__=='__main__':
+
+    # LOAD ENVIRONMENT VARIABLES ------------------------------------------------------------
+
+    load_dotenv()
+    ap_api_key = os.environ.get('ALPHAVANTAGE_API_KEY')
 
     portfolio = [{'id': 1, 'tck': 'ABBV', 'qty': 225.000},
                  {'id': 2, 'tck': 'AZO', 'qty': 5.000},
@@ -181,5 +225,5 @@ if __name__=='__main__':
     print(f'You have specified a portfolio of {len(portfolio)} tickers.\nThe program will now retrieve data from the Alpha Vantage API.', flush=True)
     print('-----------------------------------------------', flush=True)
 
-    pull = api_data_pull(portfolio)
+    pull = port_data_pull(portfolio,ap_api_key)
     #print(pull)
