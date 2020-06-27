@@ -102,7 +102,8 @@ def fred_pull(api_key):
     fred = pd.read_csv(fred_filepath, parse_dates=['date'])
     fred['month'] = fred['date'].dt.to_period('M')
     risk_free = fred.groupby('month')['rate'].mean()
-    risk_free = risk_free / 100
+    risk_free = (1 + risk_free / 200)**(1 / 6) - 1
+
 
     return risk_free
 

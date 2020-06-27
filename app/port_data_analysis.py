@@ -56,18 +56,32 @@ def returns(dataset,period_length,min_start,max_end):
 
 
     # Calc Portf Return
-    tot_pd_ret = port_ret.loc[pd_end, 'cum ret'] - 1
     months = len(port_ret)
     years = months / 12
-    avg_ann_ret = (1 + tot_pd_ret)**(1 / years) - 1
-    avg_mon_ret = (1 + tot_pd_ret)**(1 / months) - 1
+    avg_ann_ret = (port_ret.loc[pd_end, 'cum ret'])**(1 / years) - 1
+    avg_mon_ret = (port_ret.loc[pd_end, 'cum ret'])**(1 / months) - 1
+    avg_ann_spret = (port_ret.loc[pd_end, 'cum spret'])**(1 / years) - 1
+    avg_mon_spret = (port_ret.loc[pd_end, 'cum spret'])**(1 / months) - 1
+
 
     #Calc Return Std Dev
     mon_sdev = port_ret['mon ret'].std()
     ann_sdev = mon_sdev * (12 ** .5)
 
+    mon_sp_sdev = port_ret['spret'].std()
+    ann_sp_sdev = mon_sp_sdev * (12 ** .5)
+
+    beta = port_ret.cov().loc['mon ret', 'spret'] / port_ret.cov().loc['spret', 'spret']
+
+    sharpe_port = (port_ret['exret'].mean() / port_ret['exret'].std()) * (12 ** .5)
+    sharpe_sp = (port_ret['exspret'].mean() / port_ret['exspret'].std()) * (12 ** .5)
+
+
     ret_calc = {'years_tgt': pd_len, 'years_act': years, 'months_act': months, 'st_date': f'{pd_start.year}-{pd_start.month}',
-                'end_date': f'{pd_end.year}-{pd_end.month}', 'ann_ret': avg_ann_ret, 'mon_ret': avg_mon_ret, 'ann_sdev': ann_sdev, 'mon_sdev': mon_sdev}
+                'end_date': f'{pd_end.year}-{pd_end.month}', 'ann_ret': avg_ann_ret, 'mon_ret': avg_mon_ret, 'ann_sdev': ann_sdev, 'mon_sdev': mon_sdev, 'ann_spret': avg_ann_spret, 'mon_spret': avg_mon_spret, 'ann_sp_sdev': ann_sp_sdev, 'mon_sp_sdev': mon_sp_sdev, 'beta': beta, 'sharpe_port': sharpe_port, 'sharpe_sp': sharpe_sp}
+
+
+
 
     return ret_calc, port_ret
 
