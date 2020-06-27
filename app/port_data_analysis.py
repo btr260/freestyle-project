@@ -6,6 +6,7 @@ import datetime
 import numpy as np
 from app.other_data_pull import spy_pull, fred_pull
 from app.port_data_pull import port_data_pull
+from app import APP_ENV
 
 # -------------------------------------------------------------------------------------
 # FUNCTIONS ---------------------------------------------------------------------------
@@ -56,7 +57,7 @@ def returns(dataset,period_length,min_start,max_end):
     ret_calc = {'years_tgt': pd_len, 'years_act': years, 'months_act': months, 'st_date': f'{pd_start.year}-{pd_start.month}',
                 'end_date': f'{pd_end.year}-{pd_end.month}', 'ann_ret': avg_ann_ret, 'mon_ret': avg_mon_ret, 'ann_sdev': ann_sdev, 'mon_sdev': mon_sdev}
 
-    return ret_calc
+    return ret_calc, port_ret
 
 # -------------------------------------------------------------------------------------
 # CODE --------------------------------------------------------------------------------
@@ -104,15 +105,38 @@ if __name__=='__main__':
 
     # Pull in sp500 and rf rate data
 
-    spy_join = spy_pull(ap_api_key)
-    fred_join = fred_pull(fred_api_key)
-
     # Pull in portfolio data
+    if APP_ENV == 'development':
 
-    sub, minomax, maxomin=port_data_pull(portfolio,ap_api_key)
+        sub = pd.read_csv(os.path.join(os.path.dirname(os.path.abspath(
+            __file__)), '..', 'data', "working_port.csv"), parse_dates=['timestamp', 'month'])
+        sub['month']=sub['month'].dt.to_period('M')
+
+        spy_join = pd.read_csv(os.path.join(os.path.dirname(os.path.abspath(
+            __file__)), '..', 'data', "working_spy.csv"),index_col='month')
+
+        fred_join = pd.read_csv(os.path.join(os.path.dirname(os.path.abspath(
+            __file__)), '..', 'data', "working_fred.csv"), index_col='month')
+
+        maxomin = sub['month'].min()
+        minomax = sub['month'].max()
+
+
+    else:
+
+        spy_join = spy_pull(ap_api_key)
+        fred_join = fred_pull(fred_api_key)
+
+        sub, minomax, maxomin=port_data_pull(portfolio,ap_api_key)
 
     # Calculate returns
     results = []
 
     for i in [1,2,3,5]:
-        results.append(returns(sub, i, maxomin, minomax))
+
+        temp_returns, temp_review = returns(sub, i, maxomin, minomax)
+
+        results.append(temp_returns)
+
+
+breakpoint()

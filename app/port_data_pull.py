@@ -90,6 +90,7 @@ def port_data_pull(portfolio,api_key):
 
                 print('-----------------------------------------------', flush=True)
                 print(f"DOWNLOADING DATA FOR: {tkr}", flush=True)
+                print(f'DATA FROM {close_days[-1]} TO {close_days[0]}')
                 print(f"WRITING DATA TO CSV: {os.path.abspath(csv_filepath)}", flush=True)
                 print('-----------------------------------------------', flush=True)
 
@@ -189,7 +190,6 @@ def port_data_pull(portfolio,api_key):
 
         sub = sub.sort_values(by=['ticker', 'month'])
 
-
         return sub, minomax, maxomin
 
 
@@ -206,24 +206,28 @@ if __name__=='__main__':
                  {'id': 4, 'tck': 'CCI', 'qty': 39.000},
                  {'id': 5, 'tck': 'CVS', 'qty': 200.000},
                  {'id': 6, 'tck': 'DE', 'qty': 26.000},
-                 {'id': 7, 'tck': 'DELL', 'qty': 108.000},
-                 {'id': 8, 'tck': 'ENB', 'qty': 116.000},
-                 {'id': 9, 'tck': 'HD', 'qty': 22.000},
-                 {'id': 10, 'tck': 'JPM', 'qty': 35.000},
-                 {'id': 11, 'tck': 'KKR', 'qty': 185.000},
-                 {'id': 12, 'tck': 'MPC', 'qty': 450.000},
-                 {'id': 13, 'tck': 'MRK', 'qty': 72.000},
-                 {'id': 14, 'tck': 'MET', 'qty': 90.000},
-                 {'id': 15, 'tck': 'NXST', 'qty': 55.000},
-                 {'id': 16, 'tck': 'NVT', 'qty': 60.000},
-                 {'id': 17, 'tck': 'PNR', 'qty': 60.000},
-                 {'id': 18, 'tck': 'RTX', 'qty': 46.000},
-                 {'id': 19, 'tck': 'SNY', 'qty': 100.000}]
+                 {'id': 7, 'tck': 'ENB', 'qty': 116.000},
+                 {'id': 8, 'tck': 'HD', 'qty': 22.000},
+                 {'id': 9, 'tck': 'JPM', 'qty': 35.000},
+                 {'id': 10, 'tck': 'KKR', 'qty': 185.000},
+                 {'id': 11, 'tck': 'MPC', 'qty': 450.000},
+                 {'id': 12, 'tck': 'MRK', 'qty': 72.000},
+                 {'id': 13, 'tck': 'MET', 'qty': 90.000},
+                 {'id': 14, 'tck': 'NXST', 'qty': 55.000},
+                 {'id': 15, 'tck': 'PNR', 'qty': 60.000},
+                 {'id': 16, 'tck': 'RTX', 'qty': 46.000},
+                 {'id': 17, 'tck': 'SNY', 'qty': 100.000}]
 
 
     print('-----------------------------------------------', flush=True)
     print(f'You have specified a portfolio of {len(portfolio)} tickers.\nThe program will now retrieve data from the Alpha Vantage API.', flush=True)
     print('-----------------------------------------------', flush=True)
 
-    pull = port_data_pull(portfolio,ap_api_key)
-    #print(pull)
+    pull, minomax, maxomin = port_data_pull(portfolio, ap_api_key)
+
+
+    print(pull)
+    print(f'minomax: {minomax}')
+    print(f'maxomin: {maxomin}')
+    pull.to_csv(os.path.join(os.path.dirname(os.path.abspath(
+        __file__)), '..', 'data', "working_port.csv"),index=False)

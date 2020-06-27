@@ -116,3 +116,7 @@ if __name__=='__main__':
 
     spy_join=spy_pull(ap_api_key)
     fred_join=fred_pull(fred_api_key)
+    spy_join.to_csv(os.path.join(os.path.dirname(os.path.abspath(
+        __file__)), '..', 'data', "working_spy.csv"))
+    fred_join.to_csv(os.path.join(os.path.dirname(os.path.abspath(
+        __file__)), '..', 'data', "working_fred.csv"))
