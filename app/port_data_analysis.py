@@ -250,4 +250,24 @@ if __name__=='__main__':
         fig.update_layout(legend=dict(orientation='h', font=axis_font, x=0, y=1))
         fig.show()
 
+        riskret_x = [results[i]['ann_sp_sdev'], results[i]['ann_sdev']]
+        riskret_y = [results[i]['ann_spret'], results[i]['ann_ret']]
+
+        fig_huh = go.Figure(data=go.Scatter(x=riskret_x, y=riskret_y, mode='markers', marker=dict(size=[20, 20], color=['royalblue', 'firebrick'])))
+
+        fig_huh.show()
+
     breakpoint()
+
+test_fig = make_subplots(rows=1, cols=2, specs=[[{'type':'scatter'}, {'type':'table'}]])
+test_fig.add_trace(figs[3]['port line'], row=1, col=1)
+test_fig.add_trace(figs[3]['sp line'], row=1, col=1)
+
+
+col1 = ['Avg. Annual Return', 'Std. Dev. (Ann.)', 'Sharpe Ratio', 'Beta']
+col2 = [results[3]['ann_ret'], results[3]['ann_sdev'], results[3]['sharpe_port'], results[3]['beta']]
+col3 = [results[3]['ann_spret'], results[3]['ann_sp_sdev'], results[3]['sharpe_sp'], 1]
+
+
+
+test_fig.add_trace(go.Table(header=dict(values=['Statistic', 'Portfolio', 'S&P 500']), cells=dict(values=[col1, col2, col3])),row=1,col=2)
