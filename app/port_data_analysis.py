@@ -63,7 +63,7 @@ def pd_describe(mon_len):
     full_years = int(mon_len / 12)
     resid_months = mon_len % 12
 
-    if full_years > 0 & resid_months > 0:
+    if (full_years > 0 and resid_months > 0):
         join_str = ' and '
     else:
         join_str = ''
@@ -189,6 +189,7 @@ if __name__=='__main__':
                     {'id': 15, 'tck': 'PNR', 'qty': 60.000},
                     {'id': 16, 'tck': 'RTX', 'qty': 46.000},
                     {'id': 17, 'tck': 'SNY', 'qty': 100.000}]
+
 
     else:
         portfolio = [{'id': 1, 'tck': 'ABBV', 'qty': 225.000},
