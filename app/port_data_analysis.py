@@ -4,6 +4,11 @@ import dotenv
 from dotenv import load_dotenv
 import datetime
 import numpy as np
+import plotly
+import plotly.graph_objects as go
+import plotly.express as px
+from plotly.subplots import make_subplots
+
 from app.other_data_pull import spy_pull, fred_pull
 from app.port_data_pull import port_data_pull
 from app import APP_ENV
@@ -76,14 +81,17 @@ def returns(dataset,period_length,min_start,max_end):
     sharpe_port = (port_ret['exret'].mean() / port_ret['exret'].std()) * (12 ** .5)
     sharpe_sp = (port_ret['exspret'].mean() / port_ret['exspret'].std()) * (12 ** .5)
 
+    ret_calc = {'years_tgt': pd_len, 'years_act': years, 'months_act': months, 'st_date': pd_start.strftime('%Y-%m'),
+                'end_date': pd_end.strftime('%Y-%m'), 'ann_ret': avg_ann_ret, 'mon_ret': avg_mon_ret, 'ann_sdev': ann_sdev, 'mon_sdev': mon_sdev, 'ann_spret': avg_ann_spret, 'mon_spret': avg_mon_spret, 'ann_sp_sdev': ann_sp_sdev, 'mon_sp_sdev': mon_sp_sdev, 'beta': beta, 'sharpe_port': sharpe_port, 'sharpe_sp': sharpe_sp}
 
-    ret_calc = {'years_tgt': pd_len, 'years_act': years, 'months_act': months, 'st_date': f'{pd_start.year}-{pd_start.month}',
-                'end_date': f'{pd_end.year}-{pd_end.month}', 'ann_ret': avg_ann_ret, 'mon_ret': avg_mon_ret, 'ann_sdev': ann_sdev, 'mon_sdev': mon_sdev, 'ann_spret': avg_ann_spret, 'mon_spret': avg_mon_spret, 'ann_sp_sdev': ann_sp_sdev, 'mon_sp_sdev': mon_sp_sdev, 'beta': beta, 'sharpe_port': sharpe_port, 'sharpe_sp': sharpe_sp}
+    tot_ret_data = port_ret[['cum ret', 'cum spret']] - 1
+    app_df = pd.DataFrame([[tot_ret_data.index.min() - 1, 0, 0]], columns=['month', 'cum ret', 'cum spret']).set_index('month')
+    tot_ret_data=tot_ret_data.append(app_df).sort_index()
+    tot_ret_data.index = tot_ret_data.index.to_series().astype(str)
+    tot_ret_dict = tot_ret_data.reset_index().to_dict(orient='list')
 
 
-
-
-    return ret_calc, port_ret
+    return ret_calc, tot_ret_dict, port_ret
 
 # -------------------------------------------------------------------------------------
 # CODE --------------------------------------------------------------------------------
@@ -161,12 +169,60 @@ if __name__=='__main__':
 
     # Calculate returns
     results = []
+    tot_ret=[]
+
+    x = 0
+    keep = []
+    figs = []
+    axis_font = dict(size=16, family='Times New Roman')
+    tick_font = dict(size=12, family='Times New Roman')
 
     for i in [1,2,3,5]:
+        if x==0:
+            temp_returns, temp_tot, temp_review = returns(sub, i, maxomin, minomax)
+            results.append(temp_returns)
+            tot_ret.append(temp_tot)
+            keep.append(i)
 
-        temp_returns, temp_review = returns(sub, i, maxomin, minomax)
+            fig = go.Figure()
 
-        results.append(temp_returns)
+            fig.add_trace(go.Scatter(x=temp_tot['month'], y=temp_tot['cum ret'],
+                                      name='Portfolio Cumulative Return', line=dict(color='firebrick', width=4)))
+            fig.add_trace(go.Scatter(x=temp_tot['month'], y=temp_tot['cum spret'],
+                                      name='S&P 500 Cumulative Return', line=dict(color='royalblue', width=4)))
+
+            fig.update_layout(title=dict(text='Cumulative Returns',
+                                          font=dict(family='Times New Roman', size=20)))
+            fig.update_layout(xaxis=dict(title=dict(
+                text='Month', font=axis_font), ticks='outside', tickfont=tick_font))
+            fig.update_layout(yaxis=dict(title=dict(text='Cumulative Monthly Returns (%)',
+                                                     font=axis_font), ticks='outside', tickfont=tick_font, tickformat='.1%'))
+            fig.update_layout(legend=dict(orientation='h', font=axis_font, x=0, y=1))
+
+            figs.append(fig)
+
+            if temp_returns['years_tgt'] != temp_returns['years_act']:
+                x = 1
+
+
+breakpoint()
+
+for i in range(len(figs)):
+    figs[i].show()
+
+
+
+fig1 = go.Figure()
+fig1.add_trace(go.Scatter(x=tot_ret[-1]['month'], y=tot_ret[-1]['cum ret'], name='Portfolio Cumulative Return', line=dict(color='firebrick', width=4)))
+fig1.add_trace(go.Scatter(x=tot_ret[-1]['month'], y=tot_ret[-1]['cum spret'], name='S&P 500 Cumulative Return', line=dict(color='royalblue', width=4)))
+fig1.update_layout(title=dict(text='Cumulative Returns', font=dict(family='Times New Roman', size=20)))
+
+axis_font = dict(size=16, family='Times New Roman')
+tick_font = dict(size=12, family='Times New Roman')
+
+fig1.update_layout(xaxis=dict(title=dict(text='Month', font=axis_font), ticks='outside', tickfont=tick_font))
+fig1.update_layout(yaxis=dict(title=dict(text='Cumulative Monthly Returns (%)', font=axis_font), ticks='outside', tickfont=tick_font, tickformat='.1%'))
+fig1.update_layout(legend=dict(orientation='h', font=axis_font, x=0, y=1))
 
 
 breakpoint()
