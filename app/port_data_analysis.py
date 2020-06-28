@@ -31,6 +31,31 @@ def to_usd(my_price):
     return f'${my_price:,.2f}'  # > $12,000.71
 
 
+def to_pct(dec):
+    '''
+    Converts a numeric value to usd-formatted string, for printing and display purposes.
+
+    Param: my_price (int or float) like 4000.444444
+
+    Example: to_usd(4000.444444)
+
+    Returns: $4,000.44
+    '''
+    return f'{dec:.2%}'  # > $12,000.71
+
+
+def two_dec(dec):
+    '''
+    Converts a numeric value to usd-formatted string, for printing and display purposes.
+
+    Param: my_price (int or float) like 4000.444444
+
+    Example: to_usd(4000.444444)
+
+    Returns: $4,000.44
+    '''
+    return f'{dec:,.2f}'
+
 def pd_describe(mon_len):
     '''
     Converts a specified number of months to a text description of years and months.
@@ -238,36 +263,41 @@ if __name__=='__main__':
     axis_font = dict(size=16, family='Times New Roman')
     tick_font = dict(size=12, family='Times New Roman')
     for i in range(len(figs)):
-        fig=go.Figure()
-        fig.add_trace(figs[i]['port line'])
-        fig.add_trace(figs[i]['sp line'])
+        fig = make_subplots(rows=2, cols=1, vertical_spacing=0.03, row_width=[0.75,0.25], specs=[[{'type':'table'}], [{'type':'scatter'}]])
+        fig.add_trace(figs[i]['port line'], row=2, col=1)
+        fig.add_trace(figs[i]['sp line'], row=2, col=1,)
 
         pd_months = results[i]['months_act']
 
-        fig.update_layout(title=dict(text=f'Cumulative Returns ({pd_describe(pd_months)})', font=dict(family='Times New Roman', size=20)))
+        fig.update_layout(title=dict(text=f'Portfolio Performance Report: Monthly Returns over Last {pd_describe(pd_months)}', font=dict(family='Times New Roman', size=20)))
         fig.update_layout(xaxis=dict(title=dict(text='Month', font=axis_font), ticks='outside', tickfont=tick_font))
         fig.update_layout(yaxis=dict(title=dict(text='Cumulative Monthly Returns (%)', font=axis_font), ticks='outside', tickfont=tick_font, tickformat='.1%'))
-        fig.update_layout(legend=dict(orientation='h', font=axis_font, x=0, y=1))
+        fig.update_layout(legend=dict(orientation='h', font=axis_font))
+
+        col1 = ['Avg. Annual Return', 'Std. Dev. (Ann.)', 'Sharpe Ratio', 'Beta']
+        col2 = [to_pct(results[i]['ann_ret']), to_pct(results[i]['ann_sdev']), two_dec(results[i]['sharpe_port']), two_dec(results[i]['beta'])]
+        col3 = [to_pct(results[i]['ann_spret']), to_pct(results[i]['ann_sp_sdev']), two_dec(results[i]['sharpe_sp']), two_dec(1.00)]
+
+        fig.add_trace(go.Table(header=dict(values=['Statistic', 'Portfolio', 'S&P 500']), cells=dict(values=[col1, col2, col3])),row=1,col=1)
+
         fig.show()
 
-        riskret_x = [results[i]['ann_sp_sdev'], results[i]['ann_sdev']]
-        riskret_y = [results[i]['ann_spret'], results[i]['ann_ret']]
-
-        fig_huh = go.Figure(data=go.Scatter(x=riskret_x, y=riskret_y, mode='markers', marker=dict(size=[20, 20], color=['royalblue', 'firebrick'])))
-
-        fig_huh.show()
 
     breakpoint()
 
-test_fig = make_subplots(rows=1, cols=2, specs=[[{'type':'scatter'}, {'type':'table'}]])
-test_fig.add_trace(figs[3]['port line'], row=1, col=1)
-test_fig.add_trace(figs[3]['sp line'], row=1, col=1)
+fig = make_subplots(rows=2, cols=1, vertical_spacing=0.03, row_width=[0.75,0.25], specs=[[{'type':'table'}], [{'type':'scatter'}]])
+fig.add_trace(figs[i]['port line'], row=2, col=1)
+fig.add_trace(figs[i]['sp line'], row=2, col=1,)
 
+pd_months = results[i]['months_act']
+
+fig.update_layout(title=dict(text=f'Portfolio Performance Report: Monthly Returns over Last {pd_describe(pd_months)}', font=dict(family='Times New Roman', size=20)))
+fig.update_layout(xaxis=dict(title=dict(text='Month', font=axis_font), ticks='outside', tickfont=tick_font))
+fig.update_layout(yaxis=dict(title=dict(text='Cumulative Monthly Returns (%)', font=axis_font), ticks='outside', tickfont=tick_font, tickformat='.1%'))
+fig.update_layout(legend=dict(orientation='h', font=axis_font))
 
 col1 = ['Avg. Annual Return', 'Std. Dev. (Ann.)', 'Sharpe Ratio', 'Beta']
-col2 = [results[3]['ann_ret'], results[3]['ann_sdev'], results[3]['sharpe_port'], results[3]['beta']]
-col3 = [results[3]['ann_spret'], results[3]['ann_sp_sdev'], results[3]['sharpe_sp'], 1]
+col2 = [to_pct(results[i]['ann_ret']), to_pct(results[i]['ann_sdev']), two_dec(results[i]['sharpe_port']), two_dec(results[i]['beta'])]
+col3 = [to_pct(results[i]['ann_spret']), to_pct(results[i]['ann_sp_sdev']), two_dec(results[i]['sharpe_sp']), two_dec(1.00)]
 
-
-
-test_fig.add_trace(go.Table(header=dict(values=['Statistic', 'Portfolio', 'S&P 500']), cells=dict(values=[col1, col2, col3])),row=1,col=2)
+fig.add_trace(go.Table(header=dict(values=['Statistic', 'Portfolio', 'S&P 500']), cells=dict(values=[col1, col2, col3])),row=1,col=1)
