@@ -17,6 +17,50 @@ from app import APP_ENV
 # FUNCTIONS ---------------------------------------------------------------------------
 # -------------------------------------------------------------------------------------
 
+
+def to_usd(my_price):
+    '''
+    Converts a numeric value to usd-formatted string, for printing and display purposes.
+
+    Param: my_price (int or float) like 4000.444444
+
+    Example: to_usd(4000.444444)
+
+    Returns: $4,000.44
+    '''
+    return f'${my_price:,.2f}'  # > $12,000.71
+
+
+def pd_describe(mon_len):
+    '''
+    Converts a specified number of months to a text description of years and months.
+    '''
+    full_years = int(mon_len / 12)
+    resid_months = mon_len % 12
+
+    if full_years > 0 & resid_months > 0:
+        join_str = ' and '
+    else:
+        join_str = ''
+
+    if full_years == 0:
+        yr_str = ''
+    elif full_years == 1:
+        yr_str = f'{full_years} Year'
+    else:
+        yr_str = f'{full_years} Years'
+
+    if resid_months == 0:
+        mon_str = ''
+    elif resid_months == 1:
+        mon_str = f'{resid_months} Month'
+    else:
+        mon_str=f'{resid_months} Months'
+
+    pd_detail=f'{yr_str}{join_str}{mon_str}'
+
+    return pd_detail
+
 def returns(dataset,period_length,min_start,max_end):
 
     working_data = dataset
@@ -174,8 +218,6 @@ if __name__=='__main__':
     x = 0
     keep = []
     figs = []
-    axis_font = dict(size=16, family='Times New Roman')
-    tick_font = dict(size=12, family='Times New Roman')
 
     for i in [1,2,3,5]:
         if x==0:
@@ -184,45 +226,28 @@ if __name__=='__main__':
             tot_ret.append(temp_tot)
             keep.append(i)
 
-            fig = go.Figure()
-
-            fig.add_trace(go.Scatter(x=temp_tot['month'], y=temp_tot['cum ret'],
-                                      name='Portfolio Cumulative Return', line=dict(color='firebrick', width=4)))
-            fig.add_trace(go.Scatter(x=temp_tot['month'], y=temp_tot['cum spret'],
-                                      name='S&P 500 Cumulative Return', line=dict(color='royalblue', width=4)))
-
-            fig.update_layout(title=dict(text='Cumulative Returns',
-                                          font=dict(family='Times New Roman', size=20)))
-            fig.update_layout(xaxis=dict(title=dict(
-                text='Month', font=axis_font), ticks='outside', tickfont=tick_font))
-            fig.update_layout(yaxis=dict(title=dict(text='Cumulative Monthly Returns (%)',
-                                                     font=axis_font), ticks='outside', tickfont=tick_font, tickformat='.1%'))
-            fig.update_layout(legend=dict(orientation='h', font=axis_font, x=0, y=1))
-
-            figs.append(fig)
+            figs.append({'port line': go.Scatter(x=temp_tot['month'], y=temp_tot['cum ret'], name='Portfolio Cumulative Return', line=dict(color='firebrick', width=4)), 'sp line': go.Scatter(x=temp_tot['month'], y=temp_tot['cum spret'], name='S&P 500 Cumulative Return', line=dict(color='royalblue', width=4))})
 
             if temp_returns['years_tgt'] != temp_returns['years_act']:
                 x = 1
 
 
-breakpoint()
-
-for i in range(len(figs)):
-    figs[i].show()
 
 
 
-fig1 = go.Figure()
-fig1.add_trace(go.Scatter(x=tot_ret[-1]['month'], y=tot_ret[-1]['cum ret'], name='Portfolio Cumulative Return', line=dict(color='firebrick', width=4)))
-fig1.add_trace(go.Scatter(x=tot_ret[-1]['month'], y=tot_ret[-1]['cum spret'], name='S&P 500 Cumulative Return', line=dict(color='royalblue', width=4)))
-fig1.update_layout(title=dict(text='Cumulative Returns', font=dict(family='Times New Roman', size=20)))
+    axis_font = dict(size=16, family='Times New Roman')
+    tick_font = dict(size=12, family='Times New Roman')
+    for i in range(len(figs)):
+        fig=go.Figure()
+        fig.add_trace(figs[i]['port line'])
+        fig.add_trace(figs[i]['sp line'])
 
-axis_font = dict(size=16, family='Times New Roman')
-tick_font = dict(size=12, family='Times New Roman')
+        pd_months = results[i]['months_act']
 
-fig1.update_layout(xaxis=dict(title=dict(text='Month', font=axis_font), ticks='outside', tickfont=tick_font))
-fig1.update_layout(yaxis=dict(title=dict(text='Cumulative Monthly Returns (%)', font=axis_font), ticks='outside', tickfont=tick_font, tickformat='.1%'))
-fig1.update_layout(legend=dict(orientation='h', font=axis_font, x=0, y=1))
+        fig.update_layout(title=dict(text=f'Cumulative Returns ({pd_describe(pd_months)})', font=dict(family='Times New Roman', size=20)))
+        fig.update_layout(xaxis=dict(title=dict(text='Month', font=axis_font), ticks='outside', tickfont=tick_font))
+        fig.update_layout(yaxis=dict(title=dict(text='Cumulative Monthly Returns (%)', font=axis_font), ticks='outside', tickfont=tick_font, tickformat='.1%'))
+        fig.update_layout(legend=dict(orientation='h', font=axis_font, x=0, y=1))
+        fig.show()
 
-
-breakpoint()
+    breakpoint()
