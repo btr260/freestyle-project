@@ -3,15 +3,15 @@ import os
 import dotenv
 from dotenv import load_dotenv
 import datetime
-import numpy as np
 import plotly
 import plotly.graph_objects as go
-import plotly.express as px
 from plotly.subplots import make_subplots
 
 from app.other_data_pull import spy_pull, fred_pull
 from app.port_data_pull import port_data_pull
+from app.portfolio_import import portfolio_import
 from app import APP_ENV
+
 
 # -------------------------------------------------------------------------------------
 # FUNCTIONS ---------------------------------------------------------------------------
@@ -180,48 +180,14 @@ def returns(dataset, period_length, min_start, max_end):
 
 if __name__=='__main__':
 
-    # Testing error handling with portfolio definition
-
-    handling = "good"
-
-    if handling == "good":
-
-        portfolio = [{'id': 1, 'tck': 'ABBV', 'qty': 225.000},
-                    {'id': 2, 'tck': 'AZO', 'qty': 5.000},
-                    {'id': 3, 'tck': 'STZ', 'qty': 100.000},
-                    {'id': 4, 'tck': 'CCI', 'qty': 39.000},
-                    {'id': 5, 'tck': 'CVS', 'qty': 200.000},
-                    {'id': 6, 'tck': 'DE', 'qty': 26.000},
-                    {'id': 7, 'tck': 'ENB', 'qty': 116.000},
-                    {'id': 8, 'tck': 'HD', 'qty': 22.000},
-                    {'id': 9, 'tck': 'JPM', 'qty': 35.000},
-                    {'id': 10, 'tck': 'KKR', 'qty': 185.000},
-                    {'id': 11, 'tck': 'MPC', 'qty': 450.000},
-                    {'id': 12, 'tck': 'MRK', 'qty': 72.000},
-                    {'id': 13, 'tck': 'MET', 'qty': 90.000},
-                    {'id': 14, 'tck': 'NXST', 'qty': 55.000},
-                    {'id': 15, 'tck': 'PNR', 'qty': 60.000},
-                    {'id': 16, 'tck': 'RTX', 'qty': 46.000},
-                    {'id': 17, 'tck': 'SNY', 'qty': 100.000}]
-
-
-    else:
-        portfolio = [{'id': 1, 'tck': 'ABBV', 'qty': 225.000},
-                    {'id': 2, 'tck': 'AZO', 'qty': 5.000},
-                    {'id': 3, 'tck': 'STZ', 'qty': 100.000},
-                    {'id': 4, 'tck': 'CCI', 'qty': 39.000},
-                    {'id': 5, 'tck': 'CVS', 'qty': 200.000},
-                    {'id': 6, 'tck': 'FAIL', 'qty': 26.000},
-                    {'id': 7, 'tck': 'ENB', 'qty': 116.000}]
-
     # Loan environment variables
-
     load_dotenv()
+    port_file_name = os.environ.get('PORTFOLIO_FILE_NAME')
     ap_api_key = os.environ.get('ALPHAVANTAGE_API_KEY')
     fred_api_key = os.environ.get('FRED_API_KEY')
 
-    # Pull in portfolio data depending on app environment (to avoid unnecessary and
-    # time consumingAPI calls)
+    portfolio = portfolio_import(port_file_name)
+
     if APP_ENV == 'development':
 
         # Requires that each of other_data_pull and port_data_pull modules be
