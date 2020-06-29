@@ -96,7 +96,7 @@ def fred_pull(api_key):
                 })
 
     print('--------------------------------------------------------')
-    print('Formatting 1-Year Treasury Bill Rates------------------')
+    print('Formatting 1-Year Treasury Bill Rates-------------------')
     print('--------------------------------------------------------')
 
     fred = pd.read_csv(fred_filepath, parse_dates=['date'])
