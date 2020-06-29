@@ -40,6 +40,7 @@ def port_data_pull(portfolio,api_key):
         start = i * 5
         end = min(len(tck_list), start + 5)
 
+        # Wait 1 minute and 10 seconds to avoid hitting 5 call per minute API limit
         time.sleep(70)
 
         for tkr in tck_list[start:end]:
@@ -172,7 +173,7 @@ def port_data_pull(portfolio,api_key):
         # SOURCE: https://stackoverflow.com/questions/45304531/extracting-the-first-day-of-month-of-a-datetime-type-column-in-pandas
         full_sort['month'] = full_sort['timestamp'].dt.to_period('M')
 
-        # Resize data for consistent periods -------------------------------------------------------
+        # Resize data for consistent periods (data/API limitation) ----------------------------
 
         maxomin = full_sort.groupby('ticker')['month'].min()
         #print(maxomin)
