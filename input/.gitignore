@@ -1,6 +1,4 @@
-# data/.gitignore
-
-# h/t: https://stackoverflow.com/a/5581995/670433
+# input/.gitignore
 
 # ignore all files in this directory:
 *
