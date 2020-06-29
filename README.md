@@ -84,12 +84,12 @@ APP_ENV='production'
 
 In the .env file, you MUST specify your API keys (i.e., replacing abc123 in the text shown above).  You can obtain an API keys from:
 1. [AlphaVantage API](https://www.alphavantage.co).
-2. [Federal Reserve (FRED) API] (https://fred.stlouisfed.org/docs/api/fred/)
+2. [Federal Reserve (FRED) API](https://fred.stlouisfed.org/docs/api/fred/)
 
 
 In the .env file, you must also specify the file name of a CSV file that contains your portfolio information.  By default, this variable is set to the name of the sample CSV file.
 
-Finally, set the APP_ENV variable to 'production'.  If set to something else "e.g. development", the program will bypass the API data retrieval process.  More detail on this to follow.
+Finally, set the APP_ENV variable to 'production'.  If set to something else (e.g. "development"), the program will bypass the API data retrieval process.  More detail on this to follow.
 
 
 ### Running the app
@@ -108,7 +108,7 @@ Then, the app will pull S&P 500 data from the Alpha Vantage API and 1Y T-Bill ra
 
 Next, the portfolio will retrieve data from the Alpha Vantage API for the tickers provided in the portfolio input file.  As mentioned above, if there are issues with your portfolio input tickers, the program will list the faulty tickers and ask you to try again before ending.  If the tickers are successfully found, the program will proceed with its analysis.  PLEASE NOTE: the data  retrieval step can take several minutes depending on the number of tickers included in your portfolio.  Alpha Vantage only allows 5 API calls per minute, so the app will look at the number of tickers in your portfolio file and batch them into groups of five, running each batch with a one minute (and 10 second) delay in between.  The relevant code can be found in the port_data_pull module (see port_data_pull.py in the app folder).
 
-Once the data have been collected, returns are calculated, datasets are combined, and other statistics are measured.  Results are shown for periods of 1, 2, 3, and 5 years if sufficient data exists for each of the portfolio positions.  If a position has a data history shorter than 5 years, then adjustments are made to the period lengths.  For example, if a portfolio stock only has 2 years and 6 months of data, then the program will analyze the portfolio's performance over 1, 2, and 2.5 year periods (i.e., abbreviating the 3 year measurement and skipping the 5th year measurement).  The relevant code can be found in the port_data_analysis module (see port_data_analysis.py in the app folder).
+Once the data have been collected, returns are calculated, datasets are combined, and other statistics are measured.  Results are shown for periods of 1, 2, 3, and 5 years if sufficient data exists for each of the portfolio positions.  If a position has a data history shorter than 5 years, then adjustments are made to the period lengths.  For example, if a portfolio stock only has 2 years and 6 months of data, then the program will analyze the portfolio's performance over 1, 2, and 2.5 year periods (i.e., abbreviating the 3 year measurement and skipping the 5 year measurement).  The relevant code can be found in the port_data_analysis module (see port_data_analysis.py in the app folder).
 
 Once the analysis has been performed for each period, the results are shown in a portfolio report (opened automatically via your browser) using Plotly data visualization tools.
 
@@ -123,3 +123,9 @@ python -m app.port_data_pull
 ```
 
 Running these on their own will prepare working datasets and save them in the CSV folder.  The port_data_analysis app will then pull from these files rather than calling on the port_data_pull and other_data_pull modules.
+
+Once those have been run, you can run the port_data_analysis app for testing and further development:
+
+```sh
+python -m app.port_data_analysis
+```
