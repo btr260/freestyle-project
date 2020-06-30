@@ -8,11 +8,12 @@ from dotenv import load_dotenv
 
 # FUNTIONS
 
-def hasnum(ticker_input_str):
-    '''
-    Checks string for presence of numeric character
-    '''
-    return any(char.isdigit() for char in ticker_input_str)
+#TODO: hasnum function for later when I add input data validations
+#def hasnum(ticker_input_str):
+#    '''
+#    Checks string for presence of numeric character
+#    '''
+#    return any(char.isdigit() for char in ticker_input_str)
 
 
 def portfolio_import(file_name):
